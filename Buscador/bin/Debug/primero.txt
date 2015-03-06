@@ -1,0 +1,7 @@
+﻿Es uno de los métodos relativamente más
+sencillo e intuitivo, pero también
+resulta ser uno de los más ineficientes.
+Se basa en la ordenación por cambio, y
+recibe su nombre de la semejanza con las
+burbujas de un depósito de agua donde
+cada burbuja busca su propio nivel.

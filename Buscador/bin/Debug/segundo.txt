@@ -1,0 +1,10 @@
+La idea básica es encontrar el elemento
+más pequeño (grande), en orden ascendente
+de la lista, e intercambiarlo con el
+elemento que ocupa la primer posición en
+la lista, a continuación se busca el
+siguiente elemento más pequeño y se
+transfiere a la segunda posición. Se
+repite el proceso hasta que el último
+elemento ha sido transferido a su
+posición correcta.
