@@ -7,6 +7,78 @@ namespace Buscador
 {
 	class MainClass
 	{
+		public class States
+		{
+			private Dictionary<char,int> map = new Dictionary<char,int> ();
+			private int idEstado;
+			public int getIdEstado()
+			{
+				return idEstado;
+			}
+			public void addNode(char T)
+			{
+				if (map.ContainsKey(T)) 
+					return;
+				map.Add (T, S);
+			}
+			public void deleteNode(char T, int S)
+			{
+				if (map.ContainsKey (T))
+					map.Remove (T);
+			}
+			public int getOutState(char T)
+			{
+				if (map.ContainsKey (T))
+					return map [T];
+				return -1;
+			}
+
+		}
+		pubclic class Machine
+		{
+			private List<States> states;
+
+			private int cState;
+			private States cNode;
+			private int getCState()
+			{
+				return cState;
+			}
+			private States getCNode()
+			{
+				return cNode;
+			}
+			public Machine()
+			{
+				states = new List<States>();
+			}
+			public void AddNode(States S)
+			{
+				if (states.Count == 0) {
+					states.Add (S);
+					cState = S;
+					cNode = S.getIdEstado ();
+					return;
+				}
+				foreach (States state in states) {
+					if (state.getIdEstado () == S.getIdEstado ())
+						return;
+				}
+				states.Add (S);
+			}
+			public void AddLink(char T)
+			{
+				int id = cNode.getOutState (T);
+				if (id == -1)
+					return;
+				foreach (States state in states) {
+					if (state.getIdEstado == cState) {
+						cNode = state;
+						break;
+					}
+				}
+			}
+		}
 		public static void TableKMP(string P, ref int []F)
 		{
 			int pos = 2;
@@ -37,6 +109,11 @@ namespace Buscador
 					}
 				}
 			}
+		}
+		public Machine CreateMachine(string expr)
+		{
+			Machine m = new Machine ();
+
 		}
 		// T: texto donde buscar
 		// P: Palabra a buscar
