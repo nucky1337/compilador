@@ -7,21 +7,124 @@ namespace Buscador
 {
 	class MainClass
 	{
-		public class States
+		public enum Transition
 		{
-			private Dictionary<char,int> map = new Dictionary<char,int> ();
-			private int idEstado;
+			NullTransition = 0,
+			PlusTransition,
+			StarTransition,
+			OrTransition,
+			OtherTransition
+		}
+		public enum StateID
+		{
+			NullStateID = 0,
+			PlusState,
+			OtherState
+		}
+		public abstract class FSMState
+		{
+			protected Dictionary<Transition,StateID> map = new Dictionary<Transition, StateID> ();
+			protected StateID stateID;
+			public StateID ID { get { return stateID; } }
+			public void AddTransition(Transition T, StateID id)
+			{
+				if (T == Transition.NullTransition)
+					return;
+				if (id == StateID.NullStateID)
+					return;
+				if (map.ContainsKey (T))
+					return;
+				map.Add (T, id);
+			}
+			public StateID GetOutputState(Transition T)
+			{
+				if (map.ContainsKey (T))
+					return map [T];
+				return StateID.NullStateID;
+			}
+		}
+
+		public class FSMSystem
+		{
+			private List<FSMState> states;
+			private StateID currentStateID;
+			public StateID CurrentStateID { get { return currentStateID; } }
+			private FSMState currentState;
+			public FSMState CurrentState { get { return currentState; } }
+			public FSMSystem()
+			{
+				states = new List<FSMState>();
+			}
+			public void AddState(FSMState s)
+			{
+				if (s == null)
+					return;
+				if (states.Count == 0) {
+					states.Add (s);
+					currentState = s;
+					currentStateID = s.ID;
+					return;
+				}
+				foreach (FSMState state in states) {
+					if (state.ID == s.ID) {
+						return;
+					}
+				}
+				states.Add (s);
+			}
+			public void PerformTransition(Transition T)
+			{
+				if (T == Transition.NullTransition)
+					return;
+				StateID id = currentState.GetOutputState (T);
+				if (id == StateID.NullStateID)
+					return;
+				currentStateID = id;
+				foreach (FSMState state in states) {
+					if (state.ID == currentStateID) {
+						currentState = state;
+						break;
+					}
+				}
+			} 
+		}
+
+		public class PlusTransition : FSMState
+		{
+			private char c;
+			public PlusTransition(char val)
+			{
+				c = val;
+				stateID = StateID.PlusState;
+			}
+		}
+	/// <summary>
+	/// version personal
+	/// </summary>
+		public class State
+		{
+			public Dictionary<char,int> map = new Dictionary<char,int> ();
+			private int idEstado = 0;
+			public State(char K, int V)
+			{
+				map.Add(K,V);
+				idEstado = V;
+			}
+			public State(int V)
+			{
+				idEstado = V;
+			}
 			public int getIdEstado()
 			{
 				return idEstado;
 			}
-			public void addNode(char T)
+			public void addNode(char T, int S)
 			{
 				if (map.ContainsKey(T)) 
 					return;
 				map.Add (T, S);
 			}
-			public void deleteNode(char T, int S)
+			public void deleteNode(char T)
 			{
 				if (map.ContainsKey (T))
 					map.Remove (T);
@@ -29,56 +132,160 @@ namespace Buscador
 			public int getOutState(char T)
 			{
 				if (map.ContainsKey (T))
-					return map [T];
+					return map[T];
 				return -1;
 			}
 
 		}
-		pubclic class Machine
+		public class Machine
 		{
-			private List<States> states;
+			public List<State> states;
 
-			private int cState;
-			private States cNode;
-			private int getCState()
+			private int idState = 0;
+			private int finalState = 0;
+			private State cState = null;
+			private State firstState = null;
+			private State prevState = null;
+			public State getPrevState { get { return prevState; } }
+			public int getFinalState { get { return finalState; } }
+			public void ResetMachine()
+			{
+				cState = firstState;
+			}
+			public void setFinalState(int st)
+			{
+				finalState = st;
+			}
+			public void setCIDState(int st)
+			{
+				idState = st;
+			}
+			public int getCIDState()
+			{
+				return idState;
+			}
+			public State getCState()
 			{
 				return cState;
 			}
-			private States getCNode()
-			{
-				return cNode;
-			}
 			public Machine()
 			{
-				states = new List<States>();
+				states = new List<State>();
 			}
-			public void AddNode(States S)
+			public void AddState(State S, bool b)
 			{
 				if (states.Count == 0) {
 					states.Add (S);
+					firstState = S;
+					idState = S.getIdEstado();
+					//idState = 0;
 					cState = S;
-					cNode = S.getIdEstado ();
 					return;
 				}
-				foreach (States state in states) {
+				foreach (State state in states) {
 					if (state.getIdEstado () == S.getIdEstado ())
 						return;
 				}
+
 				states.Add (S);
+				if (b) {
+					prevState = cState;
+					idState = S.getIdEstado();
+					cState = S;
+				}
 			}
-			public void AddLink(char T)
+
+			public void Transition(char T)
 			{
-				int id = cNode.getOutState (T);
-				if (id == -1)
+				int id = cState.getOutState (T);
+				if (id == -1) {
+					setCIDState (0);
+					ResetMachine ();
 					return;
-				foreach (States state in states) {
-					if (state.getIdEstado == cState) {
-						cNode = state;
+				}
+				idState = id;
+				foreach (State state in states) {
+					if (state.getIdEstado() == idState) {
+						cState = state;
 						break;
 					}
 				}
 			}
 		}
+
+		public static Machine BuildMachine(string expr)
+		{
+			Machine m = new Machine ();
+			char temp = ' ';
+			int counter = 1;
+			bool pending = false;
+			m.AddState (new State (0),true);
+			m.setFinalState (0);
+			foreach (char c in expr) {
+				/*if (m.getCState == 0 && m.getCNode == null) {
+					m.AddNode()
+				}*/
+				if (pending) {
+					m.getPrevState.addNode (c, counter - 1);
+					pending = false;
+				} else {
+					switch (c) {
+					case '*':
+						//m.AddState (new State(temp,m.getCIDState));
+						m.getCState ().addNode (temp, m.getCIDState ());
+						break;
+					case '|':
+						//m.getPrevState.addNode (temp, counter - 1);
+						pending = true;
+						break;
+					case '+':
+						//m.AddState (new State (counter++), true);
+						//m.getPrevState.addNode (temp, counter - 1);
+						//m.setFinalState (counter - 1);
+						m.getCState ().addNode (temp, m.getCIDState());
+						break;
+					default:
+						m.AddState (new State (counter++), true);
+						m.getPrevState.addNode (c, counter - 1);
+						m.setFinalState (counter - 1);
+						break;
+					}
+				}
+				temp = c;
+			}
+			m.setCIDState(0);
+			m.ResetMachine ();
+			return m;
+		}
+		public static void RecorreMaquina(string S, Machine m)
+		{
+			foreach (State state in m.states) {
+				Console.WriteLine ("Estado: " + state.getIdEstado());
+				foreach (KeyValuePair<char,int> map in state.map) {
+					Console.WriteLine (string.Format ("Key-{0}:Value-{1}", map.Key, map.Value));
+				}
+			}
+			int i = 0;
+			Console.WriteLine ("Estado final: " + m.getFinalState);
+			foreach (char c in S) {
+				m.Transition (c);
+				String valid = " ";
+				if (m.getCIDState () == m.getFinalState)
+					valid = " cadena valida hasta " + i;
+				else
+					valid = "";
+				i++;
+				Console.WriteLine ("Transicion para " + c + ": idState-> " + m.getCIDState () + valid);
+
+
+			}
+		}
+
+		public FSMSystem BuildFSMSystem(string expr)
+		{
+			return null;
+		}
+
 		public static void TableKMP(string P, ref int []F)
 		{
 			int pos = 2;
@@ -113,7 +320,7 @@ namespace Buscador
 		public Machine CreateMachine(string expr)
 		{
 			Machine m = new Machine ();
-
+			return null;
 		}
 		// T: texto donde buscar
 		// P: Palabra a buscar
@@ -164,6 +371,8 @@ namespace Buscador
 			List<string> files = new List<string>();
 			StreamReader sr;
 			string expr;
+			Machine m = BuildMachine ("busca+");
+			RecorreMaquina ("buscccaaaabuscaaaabusco", m);
 			if (args.Length < 3)
 			{
 				Console.WriteLine(usage);
