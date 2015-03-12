@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 
 namespace Buscador
 {
@@ -322,8 +321,12 @@ namespace Buscador
 			Machine m = new Machine ();
 			return null;
 		}
-		// T: texto donde buscar
-		// P: Palabra a buscar
+		/// <summary>
+		/// Encuentra el String dentro de otro.
+		/// </summary>
+		/// <returns>Posicion de la coincidencia</returns>
+		/// <param name="T">T. Texto donde buscar</param>
+		/// <param name="P">P. Palabra a buscar</param>
 		public static int findKMP(string T, string P)
 		{
 	    	int k = 0; //puntero de examen en T
